@@ -1,6 +1,6 @@
 # DVESTA
 
-Various Spring services and Spring components related to home automation based on Spring Boot.
+Various Spring services and Spring components related to home automation.
 
 ## batterybackdata
 
@@ -11,12 +11,12 @@ Supports storing bits, floats, ints and shorts. Key is a string.
 
 ## chat
 
-Enables the system sending chat messages over XMPP and Jabber.
+Send and receive chat messages over XMPP and Jabber.
 
 ## cl300
 
 CL300 is a control computer for house heating from IVT. This module reads a serial ports with
- temperatures, state, timing etc.
+ temperatures, state, timers and thresholds etc.
  
 ## datalogger
 
@@ -29,20 +29,20 @@ A demo module, a template for new control modules.
 
 ## iodevices: adu208
 
-Interfaces a ADU 208, an USB I/O module with relay output and digital inputs
+Interfaces a ADU 208, a USB I/O module with relay output and digital inputs
 
 ## iodevices: k8055
 
-Interfaces a Velleman K8055, an USB I/O module with TTL inputs, 500 mA digital outputs and analog in/out.
+Interfaces a Velleman K8055, a USB I/O module with digital and analog inputs and outputs.
 
 ## iodevices: owfs
 
-Interfaces a owfs filesystem, an interface to Dallas Semiconductor 1-wire bus. Assumes owfs is installed and
+Interfaces Dallas Semiconductor 1-wire bus through a owfs filesystem. Assumes owfs is installed and
 mounted on the controller host at /mnt/1wire.
  
 ## iodevices: Razberry
 
-Interfaces a Raspberry Pi equipped with a Razberry which is a Z-Wave controller. HTTP REST interface. '
+Interfaces a Raspberry Pi with a Razberry Z-Wave controller. HTTP REST interface.
 
 ## ioscan
 
