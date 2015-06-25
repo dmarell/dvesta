@@ -29,7 +29,7 @@ public class DoorBell implements TickConsumer {
         player = new SoundClip(soundFile, new SoundClip.Listener() {
             @Override
             public void ready() {
-                log.info("SoundClipPlayer " + doorBellPushButton.getName() + " ready:" + soundPlayerDevice);
+                log.info("DoorBell: SoundClipPlayer " + doorBellPushButton.getName() + " ready:" + soundPlayerDevice);
             }
         });
         if (volume != Float.NaN) {
@@ -40,7 +40,8 @@ public class DoorBell implements TickConsumer {
         if (soundPlayerDevice != null) {
             log.info("DoorBell: Matched sound player device " + soundPlaybackDevicePattern);
         } else {
-            log.info("Could not find specified sound playback device matching pattern \"" + soundPlaybackDevicePattern + "\". Using default");
+            log.info("DoorBell: Could not find specified sound playback device matching pattern \"" +
+                    soundPlaybackDevicePattern + "\". Using default");
         }
     }
 
@@ -55,12 +56,16 @@ public class DoorBell implements TickConsumer {
         if (doorBellState) {
             if (!prevDoorBellState) {
                 // Button was pushed
-                log.info("doorBellPushButton pressed, playing " + soundFile.getName() + " on device " + soundPlayerDevice + ",volume " + volume);
-
-                try {
-                    player.play(soundPlayerDevice, volume);
-                } catch (AudioException e) {
-                    log.info("Play failed:" + soundPlayerDevice, e);
+                if (soundPlayerDevice != null) {
+                    log.info("DoorBell: push button pressed, playing " + soundFile.getName() + " on device " +
+                            soundPlayerDevice + ",volume " + volume);
+                    try {
+                        player.play(soundPlayerDevice, volume);
+                    } catch (AudioException e) {
+                        log.info("DoorBell: Play failed: " + soundPlayerDevice, e);
+                    }
+                } else {
+                    log.info("DoorBell: push button pressed but cannot play sound because of missing soundPlayerDevice");
                 }
             }
         }
