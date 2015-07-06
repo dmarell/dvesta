@@ -14,7 +14,6 @@ import java.util.Map;
 
 /**
  * Uses the CL300Fetcher to read parameters and input them to the DataLogger
- * <p/>
  * Convert value to degrees celsius: (value - 1962) / 18.31
  */
 public class CL300Logger {
@@ -50,7 +49,7 @@ public class CL300Logger {
         private String description;
         private boolean isTemperature;
 
-        private Parameter(int id, String description, boolean isTemperature) {
+        Parameter(int id, String description, boolean isTemperature) {
             this.id = id;
             this.description = description;
             this.isTemperature = isTemperature;

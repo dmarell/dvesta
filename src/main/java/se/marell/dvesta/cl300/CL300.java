@@ -16,7 +16,6 @@ import java.util.TooManyListenersException;
 
 /**
  * Handle collection of parameters from a CL300 (control unit for heat pump) through a serial port.
- * <p/>
  * <code>
  * Example:
  * CL300 c = new CL300("/dev/ttyS0");
@@ -33,6 +32,11 @@ public class CL300 implements SerialPortEventListener {
     private int recLength;
     private boolean recError;
 
+    /**
+     * Open a serial port.
+     * @param portName Name of port, e.g., /dev/ttyUSB0
+     * @throws IOException if port cannot be opened because is does not exist or no permission or too many listeners error
+     */
     public CL300(String portName) throws IOException {
 
         // Get all serial ports in the system

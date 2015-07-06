@@ -32,7 +32,7 @@ public class CL300Fetcher {
 
     /**
      * @param portName Serial port name, e.g., /dev/ttyS0
-     * @throws java.io.IOException
+     * @throws IOException if port cannot be opened because is does not exist or no permission or too many listeners error
      */
     public CL300Fetcher(String portName) throws IOException {
         cl300 = new CL300(portName);
