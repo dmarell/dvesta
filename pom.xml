@@ -15,8 +15,8 @@
 
     <scm>
         <url>https://github.com/dmarell/dvesta</url>
-        <connection>scm:git:git://github.com/dmarell/dvesta.git</connection>
-        <developerConnection>scm:git:git@github.com:dmarell/dvesta.git</developerConnection>
+        <connection>scm:git:https://github.com/dmarell/dvesta.git</connection>
+        <developerConnection>scm:git:https://github.com:dmarell/dvesta.git</developerConnection>
     </scm>
 
     <distributionManagement>
