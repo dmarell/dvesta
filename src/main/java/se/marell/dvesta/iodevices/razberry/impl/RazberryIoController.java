@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import se.marell.dvesta.iodevices.AbstractIoController;
 import se.marell.dvesta.iodevices.razberry.config.RazberryConfiguration;
 import se.marell.dvesta.iodevices.razberry.config.RazberryDeviceAddress;
@@ -244,7 +245,11 @@ public class RazberryIoController extends AbstractIoController implements Razber
                 }
                 slot.devicesResponse = null;
             } catch (InterruptedException | ExecutionException e) {
-                throw new IllegalStateException("Unexpected exception: " + e.getClass().getName(), e);
+                if (e.getCause() instanceof RestClientException) {
+                    log.debug("RestClientException,razberryUri:" + slot.razberryUri + ": " + e.getMessage());
+                } else {
+                    throw new IllegalStateException("Unexpected exception: " + e.getClass().getName(), e);
+                }
             }
         }
     }
