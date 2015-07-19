@@ -2,6 +2,10 @@
 
 Various Spring services and Spring components related to home automation.
 
+### Release notes
+* Version 1.0.10 - 2015-07-19
+  * Changed repo URL
+
 ## batterybackdata
 
 A simple key-value database emulating the behaviour of battery backed up memory. 
