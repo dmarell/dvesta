@@ -3,8 +3,10 @@
 Various Spring services and Spring components related to home automation.
 
 ### Release notes
+* Version 1.1.0 - 2016-01-07
+    * Added Slack chat support
 * Version 1.0.10 - 2015-07-19
-  * Changed repo URL
+    * Changed repo URL
 
 ## batterybackdata
 
@@ -15,7 +17,10 @@ Supports storing bits, floats, ints and shorts. Key is a string.
 
 ## chat
 
-Send and receive chat messages over XMPP and Jabber.
+Send and receive text chat messages. Support for
+
+* Jabber (XMPP)
+* Slack
 
 ## cl300
 
@@ -72,6 +77,7 @@ real-time systems and PLCs.
 Utility classes.
  
 Simple standalone services:
-- DaylightDarkness: Aggregates many DaylightSensorService instances.
-- DoorBell: Control module reading a push-button and playing a sound
-- PulseLight: Pulse flashing an analog output. Cool thing suggesting that your house computer is more advanced than it is
+
+* DaylightDarkness: Aggregates many DaylightSensorService instances.
+* DoorBell: Control module reading a push-button and playing a sound
+* PulseLight: Pulse flashing an analog output. Cool thing suggesting that your house computer is more advanced than it is
