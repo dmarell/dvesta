@@ -5,10 +5,12 @@ package se.marell.dvesta.chat.chatstub;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import se.marell.dvesta.chat.chatapi.TextChatConnection;
 
 @Service
+@Qualifier("stub")
 public class ChatStub implements TextChatConnection {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 

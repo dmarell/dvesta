@@ -4,8 +4,7 @@
 package se.marell.dvesta.chat.chatapi;
 
 public interface TextChatConnection {
-
-    public interface MessageListener {
+    interface MessageListener {
         void messageReceived(String message);
     }
 

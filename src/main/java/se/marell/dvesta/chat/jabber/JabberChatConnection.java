@@ -6,6 +6,7 @@ package se.marell.dvesta.chat.jabber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import se.marell.dvesta.chat.chatapi.TextChatConnection;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Qualifier("jabber")
 public class JabberChatConnection implements TextChatConnection {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
