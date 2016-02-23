@@ -77,6 +77,11 @@ public class RazberryDeviceAddress extends DeviceAddress {
     }
 
     @Override
+    public String getGlobalDeviceIdentifier() {
+        return url + "." + deviceId;
+    }
+
+    @Override
     public String toString() {
         return "RazberryDeviceAddress{" +
                 "url='" + url + '\'' +

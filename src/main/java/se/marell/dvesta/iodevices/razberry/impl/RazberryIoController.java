@@ -32,41 +32,21 @@ import java.util.concurrent.Future;
 
 @Service
 public class RazberryIoController extends AbstractIoController implements RazberryIoConfigurationService {
+    private static final String MODULE_NAME = "RazberryIoController";
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    private static final class RazberrySlot {
-        public String razberryUri;
-
-        public Future<ResponseEntity<ZAutomationDevicesReply>> devicesResponse;
-        public long updateTimeLastDevicesReply;
-
-        public Future<ResponseEntity<ZWayDataReply>> dataResponse;
-        public long updateTimeLastDataReply;
-
-        public RazberrySlot(String razberryUri) {
-            this.razberryUri = razberryUri;
-        }
-    }
-
     @Autowired
     private RazberryClient razberryClient;
-
-    private static final String MODULE_NAME = "RazberryIoController";
     private List<RazberrySlot> razberrySlots = new ArrayList<>();
-
     @Autowired
     private TickEngine tickEngine;
     @Autowired
     private IoMapper ioMapper;
-
     private Map<String/*url*/, List<BitInput>> bitInputMap = new HashMap<>();
     private Map<String/*url*/, List<BitOutput>> bitOutputMap = new HashMap<>();
     private Map<String/*url*/, List<FloatInput>> floatInputMap = new HashMap<>();
     private Map<String/*url*/, List<FloatOutput>> floatOutputMap = new HashMap<>();
     private Map<String/*url*/, List<AlarmInput>> alarmInputMap = new HashMap<>();
-
     private Map<String/*Logical name*/, RazberryDeviceAddress> deviceAddressMap = new HashMap<>();
-
     private TickConsumer preTickConsumer;
     private TickConsumer postTickConsumer;
 
@@ -221,6 +201,38 @@ public class RazberryIoController extends AbstractIoController implements Razber
         triggerRazberryRequests();
     }
 
+    /*
+    {
+      "data": {
+        "structureChanged": false,
+        "updateTime": 1456211541,
+        "devices": [
+          {
+            "creationTime": 1453412892,
+            "creatorId": 1,
+            "deviceType": "switchMultilevel",
+            "h": 1107079067,
+            "hasHistory": false,
+            "id": "ZWayVDev_zway_3-0-38",
+            "location": 0,
+            "metrics": {
+              "icon": "multilevel",
+              "title": "Fibar Group Dimmer (3.0)",
+              "level": 36
+            },
+            "permanently_hidden": false,
+            "probeType": "dimmer",
+            "tags": [],
+            "visibility": true,
+            "updateTime": 1456211226
+          }
+        ]
+      },
+      "code": 200,
+      "message": "200 OK",
+      "error": null
+    }
+     */
     private void handleDevicesResponse(RazberrySlot slot) {
         if (slot.devicesResponse != null && slot.devicesResponse.isDone()) {
             try {
@@ -254,6 +266,36 @@ public class RazberryIoController extends AbstractIoController implements Razber
         }
     }
 
+    /*
+     * Example response with a dimmer:
+    {
+      "devices.3.data.lastSend": {
+        "value": 4132461,
+        "type": "int",
+        "invalidateTime": 1455452226,
+        "updateTime": 1456211226
+      },
+      "devices.3.data.lastReceived": {
+        "value": 0,
+        "type": "int",
+        "invalidateTime": 1453412889,
+        "updateTime": 1456211226
+      },
+      "devices.3.instances.0.commandClasses.38.data.level": {
+        "value": 36,
+        "type": "int",
+        "invalidateTime": 1456211225,
+        "updateTime": 1456211226
+      },
+      "devices.3.instances.0.commandClasses.38.data.prevLevel": {
+        "value": 36,
+        "type": "int",
+        "invalidateTime": 1455452226,
+        "updateTime": 1456211226
+      },
+      "updateTime": 1456211227
+    }
+    */
     private void handleDataResponse(RazberrySlot slot) {
         if (slot.dataResponse != null && slot.dataResponse.isDone()) {
             try {
@@ -321,8 +363,8 @@ public class RazberryIoController extends AbstractIoController implements Razber
                 if (device != null) {
                     float value = getLevelOfSensorMultilevel(device, deviceAddressMap.get(ain.getName()));
                     value = convertAnalogInputValue(deviceAddress.isConvertPercentFactor(), value);
-                    log.info(String.format("Sensor %s changed value to %s", ain.getName(), ain.getValueAsString()));
                     ain.setStatus(device.getUpdateTime(), value);
+                    log.info(String.format("Sensor %s changed value to %s", ain.getName(), ain.getValueAsString()));
                 }
             }
         }
@@ -456,42 +498,56 @@ public class RazberryIoController extends AbstractIoController implements Razber
     private void mapDevice(RazberryConfiguration config, String razberryUri) {
         for (RazberryConfiguration.BitIO io : config.getInputs()) {
             DeviceAddress address = new RazberryDeviceAddress(razberryUri, io.getDeviceId());
-            ioMapper.mapBitInput(io.getLogicalName(), address.toString(), io.getDescription());
-            log.info("Mapped Di " + io.getLogicalName() + " to address " + address.toString());
+            ioMapper.mapBitInput(io.getLogicalName(), address.getGlobalDeviceIdentifier(), io.getDescription());
+            log.info("Mapped Di " + io.getLogicalName() + " to address " + address.getGlobalDeviceIdentifier());
         }
         for (RazberryConfiguration.BitIO io : config.getOutputs()) {
             DeviceAddress address = new RazberryDeviceAddress(razberryUri, io.getDeviceId());
-            ioMapper.mapBitOutput(io.getLogicalName(), address.toString(), io.getDescription());
-            log.info("Mapped Do " + io.getLogicalName() + " to address " + address.toString());
+            ioMapper.mapBitOutput(io.getLogicalName(), address.getGlobalDeviceIdentifier(), io.getDescription());
+            log.info("Mapped Do " + io.getLogicalName() + " to address " + address.getGlobalDeviceIdentifier());
         }
         for (RazberryConfiguration.AnalogIO io : config.getAnalogInputs()) {
             DeviceAddress address = new RazberryDeviceAddress(razberryUri, io.getDeviceId());
             try {
-                ioMapper.mapFloatInput(io.getLogicalName(), address.toString(), io.getDescription(),
+                ioMapper.mapFloatInput(io.getLogicalName(), address.getGlobalDeviceIdentifier(), io.getDescription(),
                         io.getUnit(), io.getNumDecimals(), io.getMin(), io.getMax());
             } catch (IoMappingException e) {
                 log.error("Failed to map floatInput " + io.getDeviceId() + ":" + e.getMessage());
             }
-            log.info("Mapped Ai " + io.getLogicalName() + " to address " + address.toString());
+            log.info("Mapped Ai " + io.getLogicalName() + " to address " + address.getGlobalDeviceIdentifier());
         }
         for (RazberryConfiguration.AnalogIO io : config.getAnalogOutputs()) {
             DeviceAddress address = new RazberryDeviceAddress(razberryUri, io.getDeviceId());
             try {
-                ioMapper.mapFloatOutput(io.getLogicalName(), address.toString(), io.getDescription(),
+                ioMapper.mapFloatOutput(io.getLogicalName(), address.getGlobalDeviceIdentifier(), io.getDescription(),
                         io.getUnit(), io.getNumDecimals(), io.getMin(), io.getMax());
             } catch (IoMappingException e) {
                 log.error("Failed to map floatOutput " + io.getDeviceId() + ":" + e.getMessage());
             }
-            log.info("Mapped Ao " + io.getLogicalName() + " to address " + address.toString());
+            log.info("Mapped Ao " + io.getLogicalName() + " to address " + address.getGlobalDeviceIdentifier());
         }
         for (RazberryConfiguration.AlarmInput ali : config.getAlarmInputs()) {
             DeviceAddress address = new RazberryDeviceAddress(razberryUri, ali.getDeviceNumber(), ali.getInstanceNumber());
             try {
-                ioMapper.mapAlarmInput(ali.getLogicalName(), address.toString(), ali.getDescription());
+                ioMapper.mapAlarmInput(ali.getLogicalName(), address.getGlobalDeviceIdentifier(), ali.getDescription());
             } catch (IoMappingException e) {
                 log.error("Failed to map alarmInput " + ali.getDeviceId() + ":" + e.getMessage());
             }
-            log.info("Mapped Li " + ali.getLogicalName() + " to address " + address.toString());
+            log.info("Mapped Li " + ali.getLogicalName() + " to address " + address.getGlobalDeviceIdentifier());
+        }
+    }
+
+    private static final class RazberrySlot {
+        public String razberryUri;
+
+        public Future<ResponseEntity<ZAutomationDevicesReply>> devicesResponse;
+        public long updateTimeLastDevicesReply;
+
+        public Future<ResponseEntity<ZWayDataReply>> dataResponse;
+        public long updateTimeLastDataReply;
+
+        public RazberrySlot(String razberryUri) {
+            this.razberryUri = razberryUri;
         }
     }
 }

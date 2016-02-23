@@ -33,4 +33,9 @@ public abstract class OwfsDeviceAddress extends DeviceAddress {
     public String getDescriptiveDeviceName() {
         return getDeviceType() + ":" + getDeviceAddress() + ":" + getDescription();
     }
+
+    @Override
+    public String getGlobalDeviceIdentifier() {
+        return deviceAddress;
+    }
 }

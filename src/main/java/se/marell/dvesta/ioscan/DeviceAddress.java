@@ -8,6 +8,8 @@ import java.io.Serializable;
 /**
  * Represents an address to a physical input or output.
  */
-public class DeviceAddress implements Serializable {
+public abstract class DeviceAddress implements Serializable {
     private static final long serialVersionUID = 1;
+
+    public abstract String getGlobalDeviceIdentifier();
 }

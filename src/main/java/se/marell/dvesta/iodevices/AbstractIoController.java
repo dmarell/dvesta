@@ -12,7 +12,7 @@ public abstract class AbstractIoController {
     protected <E extends IoDevice> E findIoDevice(DeviceAddress address, Collection<E> devices) {
         for (E device : devices) {
             String deviceAddress = device.getDeviceAddress();
-            if (deviceAddress != null && deviceAddress.equals(address.toString())) {
+            if (deviceAddress != null && deviceAddress.equals(address.getGlobalDeviceIdentifier())) {
                 return device;
             }
         }

@@ -47,6 +47,11 @@ public class DigitalOutputAdu208Address extends DeviceAddress {
     }
 
     @Override
+    public String getGlobalDeviceIdentifier() {
+        return str;
+    }
+
+    @Override
     public String toString() {
         return str;
     }

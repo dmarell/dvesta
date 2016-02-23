@@ -7,6 +7,12 @@ Various Spring services and Spring components related to home automation.
     * Added Slack chat support
 * Version 1.0.10 - 2015-07-19
     * Changed repo URL
+* Version 1.1.1 - 2016-01-10
+    * Added @Qualifier to TextChatConnection implementations
+* Version 1.2.0 - 2016-02-23
+    * Added abstract method DeviceAddress.getGlobalDeviceIdentifier(), fix for problem related 
+      to matching Razberry devices.
+    * Upgraded Spring Boot version to 1.3.2.RELEASE.
 
 ## batterybackdata
 
