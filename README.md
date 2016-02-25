@@ -13,6 +13,10 @@ Various Spring services and Spring components related to home automation.
     * Added abstract method DeviceAddress.getGlobalDeviceIdentifier(), fix for problem related 
       to matching Razberry devices.
     * Upgraded Spring Boot version to 1.3.2.RELEASE.
+* Version 1.2.1 - 2016-02-25
+    * Added optional Razberry HTTP Basic authentication using two new application config parameters:
+      razberry.username
+      razberry.password 
 
 ## batterybackdata
 
