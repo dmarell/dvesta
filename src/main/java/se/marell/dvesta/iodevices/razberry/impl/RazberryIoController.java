@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import se.marell.dvesta.iodevices.AbstractIoController;
+import se.marell.dvesta.iodevices.razberry.RazberryStatus;
 import se.marell.dvesta.iodevices.razberry.config.RazberryConfiguration;
 import se.marell.dvesta.iodevices.razberry.config.RazberryDeviceAddress;
 import se.marell.dvesta.iodevices.razberry.config.RazberryIoConfigurationService;
@@ -23,12 +23,7 @@ import se.marell.dvesta.tickengine.TickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.*;
 
 @Service
 public class RazberryIoController extends AbstractIoController implements RazberryIoConfigurationService {
@@ -49,6 +44,37 @@ public class RazberryIoController extends AbstractIoController implements Razber
     private Map<String/*Logical name*/, RazberryDeviceAddress> deviceAddressMap = new HashMap<>();
     private TickConsumer preTickConsumer;
     private TickConsumer postTickConsumer;
+
+    public RazberryStatus getStatus(long since) {
+        long last = 0;
+        boolean hasError = false;
+        Map<String, String> out = new TreeMap<>();
+        for (RazberrySlot s : razberrySlots) {
+            String error = getLastError(s, since);
+            if (error != null) {
+                out.put(s.getRazberryUri(), error);
+            }
+            if (s.getLastStatusChange() > last) {
+                last = s.getLastStatusChange();
+            }
+            if (getLastError(s, 0) != null) {
+                hasError = true;
+            }
+        }
+        return new RazberryStatus(out, last, hasError);
+    }
+
+    private String getLastError(RazberrySlot s, long since) {
+        if (s.getLastStatusChange() > since) {
+            if (s.getLastException() != null) {
+                return s.getLastException();
+            }
+            if (s.getLastResponseStatusCode() != null && s.getLastResponseStatusCode() != 200) {
+                return "" + s.getLastResponseStatusCode();
+            }
+        }
+        return null;
+    }
 
     private void activate() {
         if (preTickConsumer != null) {
@@ -234,34 +260,32 @@ public class RazberryIoController extends AbstractIoController implements Razber
     }
      */
     private void handleDevicesResponse(RazberrySlot slot) {
-        if (slot.devicesResponse != null && slot.devicesResponse.isDone()) {
+        if (slot.getDevicesResponse() != null && slot.getDevicesResponse().isDone()) {
             try {
-                ResponseEntity<ZAutomationDevicesReply> responseEntity = slot.devicesResponse.get();
+                ResponseEntity<ZAutomationDevicesReply> responseEntity = slot.getDevicesResponse().get();
                 if (responseEntity.getStatusCode().is2xxSuccessful()) {
                     ZAutomationDevicesReply reply = responseEntity.getBody();
-                    log.trace("Reply from uri: " + slot.razberryUri + ", reply: " + reply);
+                    log.trace("Reply from uri: " + slot.getRazberryUri() + ", reply: " + reply);
                     if (reply.getData().getDevices().length > 0) {
-                        log.debug("Reply with devices from uri: " + slot.razberryUri + ", reply: " + reply);
+                        log.debug("Reply with devices from uri: " + slot.getRazberryUri() + ", reply: " + reply);
                     }
-                    copyRazberryBitInputsToLogicalBitInputs(slot, reply, bitInputMap.get(slot.razberryUri));
-                    copyRazberryBitInputsToLogicalBitInputs(slot, reply, bitOutputMap.get(slot.razberryUri));
-                    copyRazberryAnalogInputsToLogicalAnalogInputs(slot, reply, floatInputMap.get(slot.razberryUri));
-                    copyRazberryAnalogInputsToLogicalAnalogInputs(slot, reply, floatOutputMap.get(slot.razberryUri));
+                    copyRazberryBitInputsToLogicalBitInputs(slot, reply, bitInputMap.get(slot.getRazberryUri()));
+                    copyRazberryBitInputsToLogicalBitInputs(slot, reply, bitOutputMap.get(slot.getRazberryUri()));
+                    copyRazberryAnalogInputsToLogicalAnalogInputs(slot, reply, floatInputMap.get(slot.getRazberryUri()));
+                    copyRazberryAnalogInputsToLogicalAnalogInputs(slot, reply, floatOutputMap.get(slot.getRazberryUri()));
                     if (reply.getData().getDevices().length > 0) {
-                        slot.updateTimeLastDevicesReply = reply.getData().getUpdateTime();
+                        slot.setUpdateTimeLastDevicesReply(reply.getData().getUpdateTime());
                     }
                 } else {
-                    log.error("getDevices failed, uri: " + slot.razberryUri +
+                    log.error("getDevices failed, uri: " + slot.getRazberryUri() +
                             ", status: " + responseEntity.getStatusCode());
-                    slot.updateTimeLastDevicesReply = 0;
                 }
-                slot.devicesResponse = null;
-            } catch (InterruptedException | ExecutionException e) {
-                if (e.getCause() instanceof RestClientException) {
-                    log.debug("RestClientException,razberryUri:" + slot.razberryUri + ": " + e.getMessage());
-                } else {
-                    throw new IllegalStateException("Unexpected exception: " + e.getClass().getName(), e);
-                }
+                slot.setValues(responseEntity.getStatusCode().value(), null);
+                slot.setDevicesResponse(null);
+            } catch (Exception e) {
+                slot.setValues(null, e.getMessage());
+                slot.setDevicesResponse(null);
+                log.debug("Exception,razberryUri:" + slot.getRazberryUri() + ": " + e.getMessage());
             }
         }
     }
@@ -297,40 +321,42 @@ public class RazberryIoController extends AbstractIoController implements Razber
     }
     */
     private void handleDataResponse(RazberrySlot slot) {
-        if (slot.dataResponse != null && slot.dataResponse.isDone()) {
+        if (slot.getDataResponse() != null && slot.getDataResponse().isDone()) {
             try {
-                ResponseEntity<ZWayDataReply> responseEntity = slot.dataResponse.get();
+                ResponseEntity<ZWayDataReply> responseEntity = slot.getDataResponse().get();
                 if (responseEntity.getStatusCode().is2xxSuccessful()) {
                     ZWayDataReply reply = responseEntity.getBody();
-                    log.trace("Reply from uri: " + slot.razberryUri + ", reply: " + reply);
+                    log.trace("Reply from uri: " + slot.getRazberryUri() + ", reply: " + reply);
                     if (!reply.getAlarmMap().isEmpty()) {
-                        log.debug("Reply with alarmMap from uri: " + slot.razberryUri + ", reply: " + reply);
+                        log.debug("Reply with alarmMap from uri: " + slot.getRazberryUri() + ", reply: " + reply);
                     }
-                    copyRazberryAlarmInputsToLogicalAlarmInputs(slot, reply, alarmInputMap.get(slot.razberryUri));
+                    copyRazberryAlarmInputsToLogicalAlarmInputs(slot, reply, alarmInputMap.get(slot.getRazberryUri()));
                     if (!reply.getAlarmMap().isEmpty()) {
-                        slot.updateTimeLastDataReply = reply.getUpdateTime();
+                        slot.setUpdateTimeLastDataReply(reply.getUpdateTime());
                     }
                 } else {
-                    log.error("getDataSince failed, uri: " + slot.razberryUri +
+                    log.error("getDataSince failed, uri: " + slot.getRazberryUri() +
                             ", status: " + responseEntity.getStatusCode());
-                    slot.updateTimeLastDataReply = 0;
                 }
-                slot.dataResponse = null;
-            } catch (InterruptedException | ExecutionException e) {
-                throw new IllegalStateException("Unexpected exception: " + e.getClass().getName(), e);
+                slot.setValues(responseEntity.getStatusCode().value(), null);
+                slot.setDataResponse(null);
+            } catch (Exception e) {
+                slot.setValues(null, e.getMessage());
+                slot.setDataResponse(null);
+                log.debug("Exception,razberryUri:" + slot.getRazberryUri() + ": " + e.getMessage());
             }
         }
     }
 
     private void triggerRazberryRequests() {
         for (RazberrySlot slot : razberrySlots) {
-            if (slot.devicesResponse == null) {
+            if (slot.getDevicesResponse() == null) {
                 // No ongoing devices request, add a new one
-                slot.devicesResponse = razberryClient.getDevices(slot.razberryUri, slot.updateTimeLastDevicesReply + 1);
+                slot.setDevicesResponse(razberryClient.getDevices(slot.getRazberryUri(), slot.getUpdateTimeLastDevicesReply() + 1));
             }
-            if (slot.dataResponse == null) {
+            if (slot.getDataResponse() == null) {
                 // No ongoing data request, add a new one
-                slot.dataResponse = razberryClient.getDataSince(slot.razberryUri, slot.updateTimeLastDevicesReply + 1);
+                slot.setDataResponse(razberryClient.getDataSince(slot.getRazberryUri(), slot.getUpdateTimeLastDataReply() + 1));
             }
         }
     }
@@ -439,8 +465,8 @@ public class RazberryIoController extends AbstractIoController implements Razber
 
     private void postTick() {
         for (RazberrySlot slot : razberrySlots) {
-            writeLogicalBitOutputsToRazberry(slot.razberryUri);
-            writeLogicalAnalogOutputsToRazberry(slot.razberryUri);
+            writeLogicalBitOutputsToRazberry(slot.getRazberryUri());
+            writeLogicalAnalogOutputsToRazberry(slot.getRazberryUri());
         }
         triggerRazberryRequests();
     }
@@ -537,18 +563,4 @@ public class RazberryIoController extends AbstractIoController implements Razber
         }
     }
 
-    private static final class RazberrySlot {
-        public String razberryUri;
-
-        public Future<ResponseEntity<ZAutomationDevicesReply>> devicesResponse;
-        public long updateTimeLastDevicesReply;
-
-        public Future<ResponseEntity<ZWayDataReply>> dataResponse;
-        public long updateTimeLastDataReply;
-
-        public RazberrySlot(String razberryUri) {
-            this.razberryUri = razberryUri;
-        }
-    }
 }
-

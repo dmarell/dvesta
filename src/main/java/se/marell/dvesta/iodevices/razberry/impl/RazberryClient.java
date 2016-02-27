@@ -26,10 +26,11 @@ import java.util.concurrent.Future;
 @Service
 public class RazberryClient {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-    private RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
     private Environment environment;
+
+    private RestTemplate restTemplate = new RestTemplate();
 
     private String username;
     private String password;
@@ -56,7 +57,6 @@ public class RazberryClient {
     public Future<ResponseEntity<ZAutomationDevicesReply>> getDevices(String uri, long since) {
         String requestUri = uri + "/ZAutomation/api/v1/devices?since={since}";
         log.debug("request: " + requestUri + ",since: " + since);
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<ZAutomationDevicesReply> response = restTemplate.exchange(
                 requestUri, HttpMethod.GET, createHttpRequest(), ZAutomationDevicesReply.class, since);
         return new AsyncResult<>(response);
@@ -79,7 +79,6 @@ public class RazberryClient {
     public Future<ResponseEntity<ZWayDataReply>> getDataSince(String uri, long since) {
         String requestUri = uri + "/ZWaveAPI/Data/{since}";
         log.debug("request: " + requestUri + ",since: " + since);
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<ZWayDataReply> response = restTemplate.exchange(
                 requestUri, HttpMethod.GET, createHttpRequest(), ZWayDataReply.class, since);
         return new AsyncResult<>(response);
