@@ -18,6 +18,9 @@ Various Spring services and Spring components related to home automation.
       razberry.username
       razberry.password 
     * Added RazberryMonitor component for monitoring Razberry connection status
+    * Added K8055Monitor.
+    * Added Slack monitor control modules for Razberry and K8055.
+    * Added SlackConnection
 
 ## batterybackdata
 
