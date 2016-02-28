@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import se.marell.dvesta.iodevices.AbstractIoController;
-import se.marell.dvesta.iodevices.razberry.RazberryStatus;
 import se.marell.dvesta.iodevices.razberry.config.RazberryConfiguration;
 import se.marell.dvesta.iodevices.razberry.config.RazberryDeviceAddress;
 import se.marell.dvesta.iodevices.razberry.config.RazberryIoConfigurationService;
@@ -62,6 +61,10 @@ public class RazberryIoController extends AbstractIoController implements Razber
             }
         }
         return new RazberryStatus(out, last, hasError);
+    }
+
+    public int getNumUnits() {
+        return razberrySlots.size();
     }
 
     private String getLastError(RazberrySlot s, long since) {

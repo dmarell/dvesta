@@ -8,9 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan(basePackages = {
-        "se.marell.dvesta.iodevices.razberry.config",
-        "se.marell.dvesta.iodevices.razberry.impl",
-        "se.marell.dvesta.iodevices.razberry.monitor"
+        "se.marell.dvesta.iodevices.razberry.slackmonitor"
 })
-public class RazberrySpringConfig {
+public class RazberrySlackMonitorSpringConfig {
 }

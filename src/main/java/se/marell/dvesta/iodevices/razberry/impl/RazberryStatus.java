@@ -1,7 +1,7 @@
 /*
  * Created by Daniel Marell 26/02/16.
  */
-package se.marell.dvesta.iodevices.razberry;
+package se.marell.dvesta.iodevices.razberry.impl;
 
 import java.util.Map;
 
