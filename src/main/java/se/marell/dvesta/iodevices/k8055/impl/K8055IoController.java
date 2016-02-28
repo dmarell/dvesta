@@ -31,6 +31,15 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
     private List<SynchronousK8055> devices = new ArrayList<SynchronousK8055>();
     private SynchronousK8055 lastPolledDevice;
     private int nextDeviceIndex;
+    private Map<Integer/*deviceNumber*/, K8055DeviceStatus> deviceStatusMap = new HashMap<>();
+
+    private long getTimestampLastStatusChange(int deviceNumber) {
+        K8055DeviceStatus ds = deviceStatusMap.get(deviceNumber);
+        if (ds == null) {
+            return 0;
+        }
+        return ds.getTimestamp();
+    }
 
     @Autowired
     private TimeSource timeSource;
@@ -47,6 +56,40 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
 
     private TickConsumer preTickConsumer;
     private TickConsumer postTickConsumer;
+
+    public K8055Status getStatus(long since) {
+        long last = 0;
+        boolean hasError = false;
+        Map<String, String> out = new TreeMap<>();
+        for (SynchronousK8055 device : devices) {
+            String error = getLastError(device, since);
+            if (error != null) {
+                out.put("" + device.getDeviceNumber(), error);
+            }
+            long t = getTimestampLastStatusChange(device.getDeviceNumber());
+            if (t > last) {
+                last = t;
+            }
+            if (getLastError(device, 0) != null) {
+                hasError = true;
+            }
+        }
+        return new K8055Status(out, last, hasError);
+    }
+
+    public int getNumUnits() {
+        return devices.size();
+    }
+
+    private String getLastError(SynchronousK8055 device, long since) {
+        K8055DeviceStatus ds = deviceStatusMap.get(device.getDeviceNumber());
+        if (ds != null) {
+            if (!ds.isPollOk() && ds.getTimestamp() > since) {
+                return "Communication failure";
+            }
+        }
+        return null;
+    }
 
     @PreDestroy
     private void deactivate() {
@@ -184,8 +227,14 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
     private void preTick() {
         //log.info("preTick");
         if (lastPolledDevice != null) {
+            long timestamp;
 
-            long timestamp = 0;//todo lastPolledDevice.getTimestampLatestContact();
+            K8055DeviceStatus ds = deviceStatusMap.get(lastPolledDevice.getDeviceNumber());
+            if (ds != null) {
+                timestamp = ds.getTimestamp();
+            } else {
+                timestamp = 0;
+            }
 
             // Copy K8055 digital inputs to mapped logical inputs
             List<BitInput> bitInputs = bitInputMap.get(lastPolledDevice.getDeviceNumber());
@@ -218,7 +267,6 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
 
             //log.info("di1=" + lastPolledDevice.getDi(1));//todo test remove
             lastPolledDevice.setDo(1, lastPolledDevice.getDi(1));
-
         }
         pollNextDevice();
     }
@@ -226,17 +274,16 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
     private void pollNextDevice() {
         SynchronousK8055 k8055 = getNextDeviceToPoll();
         if (k8055 != null) {
-            boolean rc = k8055.poll(); // Todo: synchronous call causes CPU to wait here for answer. Change to async calls
-            //Todo handle communication failure
-            //log.info("rc=" + rc);//todo test remove
-
+            boolean pollOk = k8055.poll(); // TODO: synchronous call causes CPU to blocking wait here for answer. Change to async calls
+            K8055DeviceStatus ds = deviceStatusMap.get(k8055.getDeviceNumber());
+            if (ds == null || ds.isPollOk() != pollOk) {
+                deviceStatusMap.put(k8055.getDeviceNumber(), new K8055DeviceStatus(pollOk, System.currentTimeMillis()));
+            }
             lastPolledDevice = k8055;
         }
     }
 
     private void postTick() {
-        //log.info("postTick");//todo test remove
-
         if (lastPolledDevice != null) {
 
             // Copy touched mapped logical outputs to K8055 digital outputs

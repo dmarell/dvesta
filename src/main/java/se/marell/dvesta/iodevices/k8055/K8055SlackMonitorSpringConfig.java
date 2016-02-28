@@ -8,9 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan(basePackages = {
-        "se.marell.dvesta.iodevices.k8055.config",
-        "se.marell.dvesta.iodevices.k8055.impl",
-        "se.marell.dvesta.iodevices.k8055.monitor"
+        "se.marell.dvesta.iodevices.k8055.slackmonitor"
 })
-public class K8055SpringConfig {
+public class K8055SlackMonitorSpringConfig {
 }
