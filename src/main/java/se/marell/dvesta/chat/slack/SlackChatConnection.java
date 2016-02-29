@@ -35,8 +35,8 @@ public class SlackChatConnection implements TextChatConnection {
 
     @PostConstruct
     private void activate() {
-        session = SlackSessionFactory.createWebSocketSlackSession(environment.getProperty("bv83.slack.authtoken"));
-        slackChannelName = environment.getProperty("bv83.slack.channel");
+        session = SlackSessionFactory.createWebSocketSlackSession(environment.getProperty("dvesta.slack.authtoken"));
+        slackChannelName = environment.getProperty("dvesta.slack.channel");
 
         session.addMessagePostedListener((event, session1) -> {
             for (MessageListener listener : listeners) {

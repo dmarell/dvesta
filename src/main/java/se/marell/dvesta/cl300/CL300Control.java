@@ -27,7 +27,7 @@ public class CL300Control implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        String portName = environment.getProperty("bv83.cl300SerialPort");
+        String portName = environment.getProperty("dvesta.cl300SerialPort");
         cl300Logger = new CL300Logger(dataLogger, portName);
         cl300Logger.startThread();
         log.info("Started " + getName());

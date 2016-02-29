@@ -31,11 +31,11 @@ public class JabberChatConnection implements TextChatConnection {
 
     @PostConstruct
     private void activate() {
-        String jabberHost = environment.getProperty("bv83.jabber.host");
-        int jabberPort = Integer.parseInt(environment.getProperty("bv83.jabber.port"));
-        String jabberUsername = environment.getProperty("bv83.jabber.clientUsername");
-        String jabberPassword = environment.getProperty("bv83.jabber.clientPassword");
-        masterJabberUsername = environment.getProperty("bv83.jabber.masterUsername");
+        String jabberHost = environment.getProperty("dvesta.jabber.host");
+        int jabberPort = Integer.parseInt(environment.getProperty("dvesta.jabber.port"));
+        String jabberUsername = environment.getProperty("dvesta.jabber.clientUsername");
+        String jabberPassword = environment.getProperty("dvesta.jabber.clientPassword");
+        masterJabberUsername = environment.getProperty("dvesta.jabber.masterUsername");
         jabberClient = new JabberClient(jabberHost, jabberPort, jabberUsername, jabberPassword, message -> {
             for (MessageListener listener : listeners) {
                 listener.messageReceived(message);

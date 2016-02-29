@@ -14,12 +14,12 @@ public class SystemController {
     @Autowired
     private Environment environment;
 
-    @RequestMapping(value = "/appversion", method = RequestMethod.GET)
-    public String getAppVersion() {
+    @RequestMapping(value = "/version", method = RequestMethod.GET)
+    public String getVersion() {
         return BuildInfo.getAppVersion();
     }
 
-    @RequestMapping(value = "/runenvironment", method = RequestMethod.GET)
+    @RequestMapping(value = "/environment", method = RequestMethod.GET)
     public String getRunEnvironment() {
         return RunEnvironment.getCurrentEnvironment(environment).toString();
     }

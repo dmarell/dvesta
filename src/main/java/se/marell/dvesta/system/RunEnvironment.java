@@ -6,20 +6,16 @@ package se.marell.dvesta.system;
 import org.springframework.core.env.Environment;
 
 /**
- * Represents a runtime environment, like development, test, staging, production.
+ * Represents a runtime environments.
  * The environment is set using Spring profiles.
  * Possible values are:
- * local: Local development (default if missing)
- * autosmall: Small/fast automatic tests
- * autolarge: Large/slow automatic tests
- * man: Manual test environment
+ * local: Local development (default if unset)
+ * test: Test environment
  * prod: Production environment
  */
 public enum RunEnvironment {
     LOCAL("local"),
-    AUTOSMALL("autosmall"),
-    AUTOLARGE("autolarge"),
-    MAN("man"),
+    TEST("test"),
     PROD("prod");
 
     private String name;

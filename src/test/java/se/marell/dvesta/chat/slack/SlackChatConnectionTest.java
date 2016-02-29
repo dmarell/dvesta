@@ -15,8 +15,8 @@ import se.marell.dvesta.chat.chatapi.TextChatConnection;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {SlackChatConnection.class})
 @TestPropertySource(properties = {
-        "bv83.slack.channel: bot-corner",
-        "bv83.slack.authtoken: xxxxxxxxxxxx"})
+        "dvesta.slack.channel: bot-corner",
+        "dvesta.slack.authtoken: xxxxxxxxxxxx"})
 public class SlackChatConnectionTest {
     @Autowired
     private SlackChatConnection connection;

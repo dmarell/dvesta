@@ -42,7 +42,7 @@ public class DataLoggerControl implements DataLogger, TickConsumer, ServletConte
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         log.info("Starting " + getName());
-        String outputDirectory = environment.getProperty("bv83.dataloggerOutputDirectory");
+        String outputDirectory = environment.getProperty("dvesta.dataloggerOutputDirectory");
         writer = new LogFileWriter(new File(outputDirectory));
 
         int tickFrequency = tickEngine.findFrequency(1, 10, 1);

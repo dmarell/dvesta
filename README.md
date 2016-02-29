@@ -13,7 +13,7 @@ Various Spring services and Spring components related to home automation.
     * Added abstract method DeviceAddress.getGlobalDeviceIdentifier(), fix for problem related 
       to matching Razberry devices.
     * Upgraded Spring Boot version to 1.3.2.RELEASE.
-* Version 1.2.1 - 2016-02-27
+* Version 1.3.0 - 2016-02-29
     * Added optional Razberry HTTP Basic authentication using two new application config parameters:
       razberry.username
       razberry.password 
@@ -21,6 +21,10 @@ Various Spring services and Spring components related to home automation.
     * Added K8055Monitor.
     * Added Slack monitor control modules for Razberry and K8055.
     * Added SlackConnection
+    * Renamed recource /appversion to /version
+    * Renamed recource /runenvironment to /environment
+    * RunEnvironment: LOCAL, TEST, PROD. Removed AUTOSMALL and AUTOLARGE
+    * Renamed remaining application config properties prefixed "bv83" to "dvesta"
 
 ## batterybackdata
 
