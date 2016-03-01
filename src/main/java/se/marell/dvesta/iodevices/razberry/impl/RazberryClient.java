@@ -42,9 +42,9 @@ public class RazberryClient {
     }
 
     @Async
-    public void setSwitch(String uri, String deviceId, boolean on) {
+    public void setSwitch(String uri, String deviceId, String level) {
         String requestUri = uri + "/ZAutomation/api/v1/devices/{deviceId}/command/{status}";
-        restTemplate.exchange(requestUri, HttpMethod.GET, createHttpRequest(), Void.class, deviceId, on ? "on" : "off");
+        restTemplate.exchange(requestUri, HttpMethod.GET, createHttpRequest(), Void.class, deviceId, level);
     }
 
     @Async

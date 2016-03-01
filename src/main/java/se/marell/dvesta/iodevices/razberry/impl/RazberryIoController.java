@@ -135,7 +135,7 @@ public class RazberryIoController extends AbstractIoController implements Razber
     private void configureBitInputs(RazberryConfiguration config) {
         for (RazberryConfiguration.BitIO io : config.getInputs()) {
             if (io.getControllerUrl().equals(config.getControllerUrl())) {
-                RazberryDeviceAddress deviceAddress = new RazberryDeviceAddress(io.getControllerUrl(), io.getDeviceId());
+                RazberryDeviceAddress deviceAddress = new RazberryDeviceAddress(io.getControllerUrl(), io.getDeviceId(), io.getLevelNames());
                 deviceAddressMap.put(io.getLogicalName(), deviceAddress);
                 BitInput din = findIoDevice(deviceAddress, ioMapper.getBitInputs());
                 if (din != null) {
@@ -153,7 +153,7 @@ public class RazberryIoController extends AbstractIoController implements Razber
     private void configureBitOutputs(RazberryConfiguration config) {
         for (RazberryConfiguration.BitIO io : config.getOutputs()) {
             if (io.getControllerUrl().equals(config.getControllerUrl())) {
-                RazberryDeviceAddress deviceAddress = new RazberryDeviceAddress(io.getControllerUrl(), io.getDeviceId());
+                RazberryDeviceAddress deviceAddress = new RazberryDeviceAddress(io.getControllerUrl(), io.getDeviceId(), io.getLevelNames());
                 deviceAddressMap.put(io.getLogicalName(), deviceAddress);
                 BitOutput dout = findIoDevice(deviceAddress, ioMapper.getBitOutputs());
                 if (dout != null) {
@@ -452,10 +452,6 @@ public class RazberryIoController extends AbstractIoController implements Razber
         return null;
     }
 
-    private boolean getLevelOfSwitchBinary(ZAutomationDevice device) {
-        return device.getMetrics().getLevel().equals("on");
-    }
-
     private float getLevelOfSensorMultilevel(ZAutomationDevice device, RazberryDeviceAddress deviceAddress) {
         try {
             return Float.parseFloat(device.getMetrics().getLevel());
@@ -483,12 +479,24 @@ public class RazberryIoController extends AbstractIoController implements Razber
                 if (dout != null && dout.isTouched()) {
                     log.info("Set SwitchBinary " + dout.getName() + " to " + dout.getInputStatus() +
                             ",address: " + dout.getDeviceAddress());
-                    String deviceId = deviceAddressMap.get(dout.getName()).getDeviceId();
-                    razberryClient.setSwitch(razberryUri, deviceId, dout.getInputStatus());
+                    RazberryDeviceAddress devAddr = deviceAddressMap.get(dout.getName());
+                    razberryClient.setSwitch(razberryUri, devAddr.getDeviceId(), getSwitchLevel(devAddr, dout.getInputStatus()));
                     dout.clearTouched();
                 }
             }
         }
+    }
+
+    private boolean getLevelOfSwitchBinary(ZAutomationDevice device) {
+        String level = device.getMetrics().getLevel();
+        return level.equals("on") || level.equals("close") || level.equals("down");
+    }
+
+    private String getSwitchLevel(RazberryDeviceAddress devAddr, boolean bitIoStatus) {
+        if (devAddr.getLevelNames() != null) {
+            return devAddr.getLevelNames()[bitIoStatus ? 1 : 0];
+        }
+        return bitIoStatus ? "on" : "off";
     }
 
     private void writeLogicalAnalogOutputsToRazberry(String razberryUri) {

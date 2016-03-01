@@ -12,6 +12,7 @@ public class RazberryConfiguration {
         private String deviceId;
         private boolean invert;
         private String description;
+        private String[] levelNames;
 
         public BitIO(String logicalName, String controllerUrl, String deviceId, boolean invert, String description) {
             this.logicalName = logicalName;
@@ -19,6 +20,15 @@ public class RazberryConfiguration {
             this.deviceId = deviceId;
             this.invert = invert;
             this.description = description;
+        }
+
+        public BitIO(String logicalName, String controllerUrl, String deviceId, boolean invert, String description, String[] levelNames) {
+            this.logicalName = logicalName;
+            this.controllerUrl = controllerUrl;
+            this.deviceId = deviceId;
+            this.invert = invert;
+            this.description = description;
+            this.levelNames = levelNames;
         }
 
         public String getLogicalName() {
@@ -39,6 +49,10 @@ public class RazberryConfiguration {
 
         public String getDescription() {
             return description;
+        }
+
+        public String[] getLevelNames() {
+            return levelNames;
         }
     }
 

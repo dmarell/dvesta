@@ -12,6 +12,7 @@ public class RazberryDeviceAddress extends DeviceAddress {
     private boolean convertPercentFactor;
     private Integer deviceNumber;
     private Integer instanceNumber;
+    private String[] levelNames;
 
     public RazberryDeviceAddress(String url, String deviceId) {
         this.url = url;
@@ -29,6 +30,12 @@ public class RazberryDeviceAddress extends DeviceAddress {
         this.url = url;
         this.deviceId = deviceId;
         this.convertPercentFactor = convertPercentFactor;
+    }
+
+    public RazberryDeviceAddress(String url, String deviceId, String[] levelNames) {
+        this.url = url;
+        this.deviceId = deviceId;
+        this.levelNames = levelNames;
     }
 
     public String getUrl() {
@@ -49,6 +56,10 @@ public class RazberryDeviceAddress extends DeviceAddress {
 
     public Integer getInstanceNumber() {
         return instanceNumber;
+    }
+
+    public String[] getLevelNames() {
+        return levelNames;
     }
 
     @Override
