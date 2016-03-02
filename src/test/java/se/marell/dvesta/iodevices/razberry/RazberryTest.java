@@ -31,10 +31,10 @@ public class RazberryTest {
 
         System.out.println("Sending setSwitch on");
         String deviceId = "ZWayVDev_7:0:37";
-        r.setSwitch(uri, deviceId, false);
+        r.setSwitch(uri, deviceId, "off");
         Thread.sleep(1000);
         System.out.println("Sending setSwitch off");
-        r.setSwitch(uri, deviceId, true);
+        r.setSwitch(uri, deviceId, "on");
     }
 
     private static void testAlarmSensor() throws InterruptedException, java.util.concurrent.ExecutionException {
