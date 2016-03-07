@@ -150,14 +150,16 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
                     if (din != null) {
                         List<BitInput> c = bitInputMap.get(io.getDeviceNumber());
                         if (c == null) {
-                            final int length = 5; // Number of digital inputs on a K8055
-                            c = new ArrayList<BitInput>(length);
-                            for (int i = 0; i < length; ++i) {
+                            final int dim = 6; // Handle digital input ports 1..5 on a K8055
+                            c = new ArrayList<BitInput>(dim);
+                            for (int i = 0; i < dim; ++i) {
                                 c.add(null);
                             }
                             bitInputMap.put(io.getDeviceNumber(), c);
                         }
-                        c.set(io.getBitno(), din);
+                        if (io.getBitno() >= 0 && io.getBitno() < 6) {
+                            c.set(io.getBitno(), din);
+                        }
                     }
                 }
             }
@@ -168,14 +170,16 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
                     if (dout != null) {
                         List<BitOutput> c = bitOutputMap.get(io.getDeviceNumber());
                         if (c == null) {
-                            int length = 8; // Number of digital outputs on a K8055
+                            int length = 8; // Handle digital output ports 1..7 on a K8055
                             c = new ArrayList<BitOutput>(length);
                             for (int i = 0; i < length; ++i) {
                                 c.add(null);
                             }
                             bitOutputMap.put(io.getDeviceNumber(), c);
                         }
-                        c.set(io.getBitno(), dout);
+                        if (io.getBitno() >= 0 && io.getBitno() < 8) {
+                            c.set(io.getBitno(), dout);
+                        }
                     }
                 }
             }
@@ -258,15 +262,15 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
                         if (port == 0) {
                             value = lastPolledDevice.getAi1();
                         } else if (port == 1) {
-                            value = lastPolledDevice.getAi1();
+                            value = lastPolledDevice.getAi2();
                         }
                         ain.setStatus(timestamp, true, value);
                     }
                 }
             }
 
-            //log.info("di1=" + lastPolledDevice.getDi(1));//todo test remove
-            lastPolledDevice.setDo(1, lastPolledDevice.getDi(1));
+            //log.info("di1=" + lastPolledDevice.getDi(1));
+            lastPolledDevice.setDo(1, lastPolledDevice.getDi(1)); // Include this to flash with 1st led each poll
         }
         pollNextDevice();
     }
