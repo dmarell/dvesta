@@ -31,7 +31,10 @@ Various Spring services and Spring components related to home automation.
     * K8055
       * Added K8055Monitor
       * Added Slack monitor control module
-
+      * Fixed bug reading A1
+      * Fixed bug reading inp5
+      * Added NPE checks if user is configuring I/O outside valid ranges
+      
 ## batterybackdata
 
 A simple key-value database emulating the behaviour of battery backed up memory. 
