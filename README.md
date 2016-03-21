@@ -3,6 +3,8 @@
 Various Spring services and Spring components related to home automation.
 
 ### Release notes
+* Version 1.1.1 - 2016-03-21
+    * Added new endpoints PUT/GET log-level.
 * Version 1.1.0 - 2016-01-07
     * Added Slack chat support
 * Version 1.0.10 - 2015-07-19
