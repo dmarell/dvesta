@@ -3,6 +3,8 @@
 Various Spring services and Spring components related to home automation.
 
 ### Release notes
+* Version 1.3.2 - 2016-03-21
+    * NPE bug fix in PUT/GET log-level.
 * Version 1.3.1 - 2016-03-21
     * Added new endpoints PUT/GET log-level.
 * Version 1.3.0 - 2016-03-02

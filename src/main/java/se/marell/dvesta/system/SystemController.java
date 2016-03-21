@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 public class SystemController {
     @Autowired
@@ -59,7 +57,7 @@ public class SystemController {
 
     public String getLogLevel(String loggerName) {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
-        if (logger != null) {
+        if (logger != null && logger.getLevel() != null) {
             return logger.getLevel().toString();
         }
         return null;
