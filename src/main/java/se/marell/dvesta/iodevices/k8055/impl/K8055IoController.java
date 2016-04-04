@@ -11,8 +11,7 @@ import se.marell.dcommons.time.TimeSource;
 import se.marell.dvesta.iodevices.AbstractIoController;
 import se.marell.dvesta.iodevices.k8055.config.*;
 import se.marell.dvesta.ioscan.*;
-import se.marell.dvesta.tickengine.AbstractTickConsumer;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 import se.marell.iodevices.velleman.SynchronousK8055;
 import se.marell.libusb.LibUsbSystem;
@@ -23,15 +22,27 @@ import java.util.*;
 
 @Service
 public class K8055IoController extends AbstractIoController implements K8055IoConfigurationService {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    private static final String MODULE_NAME = "K8055IoController";
+    private static final String MODULE_NAME = K8055IoController.class.getSimpleName();
     private static final int POLL_INDICATOR_PORT = 8;
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private boolean pollIndicatorState;
-    private List<SynchronousK8055> devices = new ArrayList<SynchronousK8055>();
+    private List<SynchronousK8055> devices = new ArrayList<>();
     private SynchronousK8055 lastPolledDevice;
     private int nextDeviceIndex;
     private Map<Integer/*deviceNumber*/, K8055DeviceStatus> deviceStatusMap = new HashMap<>();
+    @Autowired
+    private TimeSource timeSource;
+    @Autowired
+    private TickEngine tickEngine;
+    @Autowired
+    private IoMapper ioMapper;
+    private Map<Integer/*K8055 address*/, List<BitInput>> bitInputMap = new HashMap<>();
+    private Map<Integer/*K8055 address*/, List<BitOutput>> bitOutputMap = new HashMap<>();
+    private Map<Integer/*K8055 address*/, List<IntegerInput>> analogInputMap = new HashMap<>();
+    private Map<Integer/*K8055 address*/, List<IntegerOutput>> analogOutputMap = new HashMap<>();
+    private UsbSystem usbSystem;
+    private NamedTickConsumer preTickConsumer;
+    private NamedTickConsumer postTickConsumer;
 
     private long getTimestampLastStatusChange(int deviceNumber) {
         K8055DeviceStatus ds = deviceStatusMap.get(deviceNumber);
@@ -40,22 +51,6 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
         }
         return ds.getTimestamp();
     }
-
-    @Autowired
-    private TimeSource timeSource;
-    @Autowired
-    private TickEngine tickEngine;
-    @Autowired
-    private IoMapper ioMapper;
-
-    private Map<Integer/*K8055 address*/, List<BitInput>> bitInputMap = new HashMap<Integer, List<BitInput>>();
-    private Map<Integer/*K8055 address*/, List<BitOutput>> bitOutputMap = new HashMap<Integer, List<BitOutput>>();
-    private Map<Integer/*K8055 address*/, List<IntegerInput>> analogInputMap = new HashMap<Integer, List<IntegerInput>>();
-    private Map<Integer/*K8055 address*/, List<IntegerOutput>> analogOutputMap = new HashMap<Integer, List<IntegerOutput>>();
-    private UsbSystem usbSystem;
-
-    private TickConsumer preTickConsumer;
-    private TickConsumer postTickConsumer;
 
     public K8055Status getStatus(long since) {
         long last = 0;
@@ -103,18 +98,8 @@ public class K8055IoController extends AbstractIoController implements K8055IoCo
             return; // Already activated
         }
         usbSystem = new LibUsbSystem(false, 0);
-        preTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-pre") {
-            @Override
-            public void executeTick() {
-                preTick();
-            }
-        };
-        postTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-post") {
-            @Override
-            public void executeTick() {
-                postTick();
-            }
-        };
+        preTickConsumer = new NamedTickConsumer(MODULE_NAME + ".pre", this::preTick);
+        postTickConsumer = new NamedTickConsumer(MODULE_NAME + ".post", this::postTick);
         log.info("activated " + MODULE_NAME);
     }
 

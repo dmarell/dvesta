@@ -29,7 +29,7 @@ public interface TickEngine {
      * @param tickFrequency Tick frequency. Must be an existing tick frequency according to #getFrequencies()
      * @param consumer      Tick consumer object
      */
-    void addTickConsumer(int tickFrequency, @NotNull TickConsumer consumer);
+    void addTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer);
 
     /**
      * Add a tick consumer called immediately before every execution tick.
@@ -40,7 +40,7 @@ public interface TickEngine {
      * @param consumer     Tick consumer object
      * @return frequency or 0 if no frequency was found
      */
-    int addTickConsumer(int lowFreq, int hiFreq, int preferedFreq, @NotNull TickConsumer consumer);
+    int addTickConsumer(int lowFreq, int hiFreq, int preferedFreq, @NotNull NamedTickConsumer consumer);
 
     /**
      * Add a tick consumer called immediately before every execution tick.
@@ -48,7 +48,7 @@ public interface TickEngine {
      * @param tickFrequency Tick frequency. Must be an existing tick frequency according to #getFrequencies()
      * @param consumer      Tick consumer object
      */
-    void addPreTickConsumer(int tickFrequency, @NotNull TickConsumer consumer);
+    void addPreTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer);
 
     /**
      * Add a tick consumer called immediately after every execution tick.
@@ -56,7 +56,7 @@ public interface TickEngine {
      * @param tickFrequency Tick frequency. Must be an existing tick frequency according to #getFrequencies()
      * @param consumer      Tick consumer object
      */
-    void addPostTickConsumer(int tickFrequency, @NotNull TickConsumer consumer);
+    void addPostTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer);
 
     /**
      * Remove all references to a tick consumer from everywhere in the TickEngine.
@@ -64,7 +64,7 @@ public interface TickEngine {
      * @param consumer Tick consumer to remove
      * @return Number of places this tick consumer were removed from
      */
-    int removeTickConsumer(@NotNull TickConsumer consumer);
+    int removeTickConsumer(@NotNull NamedTickConsumer consumer);
 
     /**
      * Get statistics for all tick frequencies.

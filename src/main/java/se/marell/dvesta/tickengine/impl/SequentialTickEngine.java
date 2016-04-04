@@ -6,7 +6,7 @@ package se.marell.dvesta.tickengine.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 import se.marell.dvesta.tickengine.TickFrequencyStats;
 
@@ -25,10 +25,10 @@ public class SequentialTickEngine implements TickEngine {
     @PostConstruct
     private void activate() {
         log.info("activate tick engine");
-        tickFrequencies = new ArrayList<TickFrequency>();
+        tickFrequencies = new ArrayList<>();
         execController = new TickFrequencyController();
 
-        int[] frequencies = new int[]{1, 20, 100};
+        int[] frequencies = new int[]{1, 20, 100}; // Default frequencies
         for (int f : frequencies) {
             TickFrequency tf = new TickFrequency(f);
             tickFrequencies.add(tf);
@@ -64,7 +64,7 @@ public class SequentialTickEngine implements TickEngine {
     }
 
     @Override
-    public synchronized void addTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+    public synchronized void addTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
         TickFrequency f = selectFrequency(tickFrequency, tickFrequency, tickFrequency);
         if (f == null) {
             throw new RuntimeException("Tried to add TickConsumer (" + consumer.toString() +
@@ -74,7 +74,7 @@ public class SequentialTickEngine implements TickEngine {
     }
 
     @Override
-    public synchronized int addTickConsumer(int lowFreq, int hiFreq, int preferedFreq, @NotNull TickConsumer consumer) {
+    public synchronized int addTickConsumer(int lowFreq, int hiFreq, int preferedFreq, @NotNull NamedTickConsumer consumer) {
         TickFrequency f = selectFrequency(lowFreq, hiFreq, preferedFreq);
         if (f != null) {
             f.addConsumer(consumer);
@@ -84,7 +84,7 @@ public class SequentialTickEngine implements TickEngine {
     }
 
     @Override
-    public synchronized void addPreTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+    public synchronized void addPreTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
         TickFrequency f = selectFrequency(tickFrequency, tickFrequency, tickFrequency);
         if (f == null) {
             throw new RuntimeException("Tried to add PreTickConsumer (" + consumer.toString() +
@@ -94,7 +94,7 @@ public class SequentialTickEngine implements TickEngine {
     }
 
     @Override
-    public synchronized void addPostTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+    public synchronized void addPostTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
         TickFrequency f = selectFrequency(tickFrequency, tickFrequency, tickFrequency);
         if (f == null) {
             throw new RuntimeException("Tried to add PostTickConsumer (" + consumer.toString() +
@@ -127,10 +127,10 @@ public class SequentialTickEngine implements TickEngine {
     }
 
     @Override
-    public synchronized int removeTickConsumer(@NotNull TickConsumer consumer) {
+    public synchronized int removeTickConsumer(@NotNull NamedTickConsumer consumer) {
         int n = 0;
         for (TickFrequency tf : tickFrequencies) {
-            n += tf.removeConsumer(consumer);
+            n += tf.removeConsumer(consumer.getTickConsumer());
         }
         return n;
     }

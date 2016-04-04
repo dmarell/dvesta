@@ -22,7 +22,7 @@ import se.marell.dvesta.iodevices.razberry.impl.commanddata.zautomation.ZAutomat
 import se.marell.dvesta.iodevices.razberry.impl.commanddata.zautomation.ZAutomationDevicesReply;
 import se.marell.dvesta.ioscan.IoScanSpringConfig;
 import se.marell.dvesta.tickengine.AbstractTickEngine;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.validation.constraints.NotNull;
@@ -53,8 +53,8 @@ public class TestConfig {
     @Autowired
     AutowireCapableBeanFactory beanFactory;
 
-    private TickConsumer preTickConsumer;
-    private TickConsumer postTickConsumer;
+    private NamedTickConsumer preTickConsumer;
+    private NamedTickConsumer postTickConsumer;
     private long time;
 
     private int alarmValue;
@@ -63,13 +63,13 @@ public class TestConfig {
     private ZAutomationDevicesReply zAutomationDevicesReply;
     private ZWayDataReply zWayDataReply;
 
+    public static String convertLogicalIdToRazberry(String id) {
+        return id + "-rz";
+    }
+
     private void initRazberryClientReplyData() {
         zAutomationDevicesReply = createZAutomationDevicesReply();
         zWayDataReply = createZWayDataReply();
-    }
-
-    public static String convertLogicalIdToRazberry(String id) {
-        return id + "-rz";
     }
 
     @Bean
@@ -119,17 +119,17 @@ public class TestConfig {
     TickEngine tickEngine() {
         return new AbstractTickEngine() {
             @Override
-            public void addTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+            public void addTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
                 fail("Unexpected");
             }
 
             @Override
-            public void addPreTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+            public void addPreTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
                 preTickConsumer = consumer;
             }
 
             @Override
-            public void addPostTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+            public void addPostTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
                 postTickConsumer = consumer;
             }
         };
@@ -154,13 +154,13 @@ public class TestConfig {
         setTime(LocalDateTime.parse(dateTime));
     }
 
+    public long getTime() {
+        return time;
+    }
+
     public void setTime(LocalDateTime dateTime) {
         this.time = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         initRazberryClientReplyData();
-    }
-
-    public long getTime() {
-        return time;
     }
 
     public long getTimeInSeconds() {
@@ -168,8 +168,8 @@ public class TestConfig {
     }
 
     public void executeTick() {
-        preTickConsumer.executeTick();
-        postTickConsumer.executeTick();
+        preTickConsumer.getTickConsumer().executeTick();
+        postTickConsumer.getTickConsumer().executeTick();
     }
 
     public void executeTick(int count) {

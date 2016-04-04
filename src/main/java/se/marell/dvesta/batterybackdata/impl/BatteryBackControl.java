@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import se.marell.dcommons.time.PassiveTimer;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.servlet.ServletContextEvent;
@@ -16,8 +16,8 @@ import javax.servlet.ServletContextListener;
 
 @Component
 public class BatteryBackControl implements ServletContextListener {
+    private static final String MODULE_NAME = BatteryBackControl.class.getSimpleName();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
     @Autowired
     private TickEngine tickEngine;
 
@@ -26,21 +26,7 @@ public class BatteryBackControl implements ServletContextListener {
     @Autowired
     private FileDataRepository repository;
 
-    private TickConsumer tickConsumer = new TickConsumer() {
-        @Override
-        public String getName() {
-            return BatteryBackControl.this.getName();
-        }
-
-        @Override
-        public void executeTick() {
-            tick();
-        }
-    };
-
-    private String getName() {
-        return "batterybackcontrol";
-    }
+    private NamedTickConsumer tickConsumer;
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
@@ -50,24 +36,17 @@ public class BatteryBackControl implements ServletContextListener {
         } catch (ParameterPersistenceException e) {
             log.info("Failed to restore state: " + e.getMessage());
         }
-
-        int tickFrequency = tickEngine.findFrequency(1, 10, 1);
-        if (tickFrequency == 0) {
-            log.info("Failed to find a suitable tick frequency: " + getName());
-            return;
-        }
-        tickEngine.addTickConsumer(tickFrequency, tickConsumer);
-
-        log.info("Started " + getName());
+        tickConsumer = new NamedTickConsumer(MODULE_NAME, this::tick, tickEngine, 1, 10, 1);
+        log.info("Started " + MODULE_NAME);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        log.info("deactivating " + getName());
+        log.info("deactivating " + MODULE_NAME);
         tickEngine.removeTickConsumer(tickConsumer);
         repository.save();
         log.info("Saved state");
-        log.info("deactivated " + getName());
+        log.info("deactivated " + MODULE_NAME);
     }
 
     private void tick() {

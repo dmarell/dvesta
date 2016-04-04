@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import se.marell.dvesta.datalogger.*;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.servlet.ServletContextEvent;
@@ -22,8 +22,10 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class DataLoggerControl implements DataLogger, TickConsumer, ServletContextListener {
+public class DataLoggerControl implements DataLogger, ServletContextListener {
+    private static final String MODULE_NAME = DataLoggerControl.class.getSimpleName();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
+    private NamedTickConsumer tickConsumer;
 
     @Autowired
     private Environment environment;
@@ -41,25 +43,18 @@ public class DataLoggerControl implements DataLogger, TickConsumer, ServletConte
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        log.info("Starting " + getName());
+        log.info("Starting " + MODULE_NAME);
         String outputDirectory = environment.getProperty("dvesta.dataloggerOutputDirectory");
         writer = new LogFileWriter(new File(outputDirectory));
-
-        int tickFrequency = tickEngine.findFrequency(1, 10, 1);
-        if (tickFrequency == 0) {
-            log.info("Failed to find a suitable tick frequency: " + getName());
-            return;
-        }
-        tickEngine.addTickConsumer(tickFrequency, this);
-
-        log.info("Started " + getName());
+        tickConsumer = new NamedTickConsumer(MODULE_NAME, this::executeTick, tickEngine, 1, 10, 1);
+        log.info("Started " + MODULE_NAME);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        log.info("deactivating " + getName());
-        tickEngine.removeTickConsumer(this);
-        log.info("deactivated " + getName());
+        log.info("deactivating " + MODULE_NAME);
+        tickEngine.removeTickConsumer(tickConsumer);
+        log.info("deactivated " + MODULE_NAME);
     }
 
     @Override
@@ -134,7 +129,6 @@ public class DataLoggerControl implements DataLogger, TickConsumer, ServletConte
         return modifiedVariables;
     }
 
-    @Override
     public synchronized void executeTick() {
         List<AbstractData> modifiedVariables = getModifiedVariablesAndClearFlag();
         if (modifiedVariables.size() > 0) {
@@ -149,10 +143,5 @@ public class DataLoggerControl implements DataLogger, TickConsumer, ServletConte
             }
             writer.writeToFile(modifiedVariables);
         }
-    }
-
-    @Override
-    public String getName() {
-        return "datalogger";
     }
 }

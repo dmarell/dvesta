@@ -5,6 +5,7 @@ package se.marell.dvesta.tickengine.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickConsumer;
 import se.marell.dvesta.tickengine.TickConsumerStats;
 import se.marell.dvesta.tickengine.TickFrequencyStats;
@@ -17,11 +18,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TickFrequency {
     private static class ListBucket {
-        TickConsumer consumer;
+        NamedTickConsumer consumer;
         TickConsumerStats stats;
         int frequency;
 
-        private ListBucket(TickConsumer consumer, int frequency) {
+        private ListBucket(NamedTickConsumer consumer, int frequency) {
             this.consumer = consumer;
             stats = new TickConsumerStats(consumer.getName(), frequency * 1000);
         }
@@ -59,30 +60,21 @@ public class TickFrequency {
 
     public TickFrequency(int tickFrequency) {
         this.tickFrequency = tickFrequency;
-        this.consumers = new CopyOnWriteArrayList<ListBucket>();
-        this.preTickConsumers = new CopyOnWriteArrayList<ListBucket>();
-        this.postTickConsumers = new CopyOnWriteArrayList<ListBucket>();
+        this.consumers = new CopyOnWriteArrayList<>();
+        this.preTickConsumers = new CopyOnWriteArrayList<>();
+        this.postTickConsumers = new CopyOnWriteArrayList<>();
         freqStats = new TickFrequencyStats(tickFrequency, tickFrequency);
     }
 
     public void spawn(int threadPriority) {
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                log.info("tick frequency " + tickFrequency + " started");
-                runFrequency();
-                log.info("tick frequency " + tickFrequency + " stopped");
-            }
+        thread = new Thread(() -> {
+            log.info("tick frequency " + tickFrequency + " started");
+            runFrequency();
+            log.info("tick frequency " + tickFrequency + " stopped");
         });
         thread.setPriority(threadPriority);
         thread.start();
-
-        tickSupervisorThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runTickSupervisorThread();
-            }
-        });
+        tickSupervisorThread = new Thread(this::runTickSupervisorThread);
         tickSupervisorThread.start();
     }
 
@@ -94,19 +86,19 @@ public class TickFrequency {
         return thread.isAlive();
     }
 
-    public synchronized void addConsumer(TickConsumer consumer) {
+    public synchronized void addConsumer(NamedTickConsumer consumer) {
         List<ListBucket> newList = new ArrayList<ListBucket>(consumers);
         newList.add(new ListBucket(consumer, tickFrequency));
         consumers = newList;
     }
 
-    public synchronized void addPreTickConsumer(TickConsumer consumer) {
+    public synchronized void addPreTickConsumer(NamedTickConsumer consumer) {
         List<ListBucket> newList = new ArrayList<ListBucket>(preTickConsumers);
         newList.add(new ListBucket(consumer, tickFrequency));
         preTickConsumers = newList;
     }
 
-    public synchronized void addPostTickConsumer(TickConsumer consumer) {
+    public synchronized void addPostTickConsumer(NamedTickConsumer consumer) {
         List<ListBucket> newList = new ArrayList<ListBucket>(postTickConsumers);
         newList.add(new ListBucket(consumer, tickFrequency));
         postTickConsumers = newList;
@@ -121,7 +113,7 @@ public class TickFrequency {
     }
 
     private List<ListBucket> removeConsumers(List<ListBucket> localConsumers, TickConsumer consumer) {
-        List<ListBucket> newList = new ArrayList<ListBucket>();
+        List<ListBucket> newList = new ArrayList<>();
         for (ListBucket b : localConsumers) {
             if (b.consumer != consumer) {
                 newList.add(b);
@@ -131,7 +123,7 @@ public class TickFrequency {
     }
 
     public synchronized TickFrequencyStats getStats() {
-        List<TickConsumerStats> stats = new ArrayList<TickConsumerStats>();
+        List<TickConsumerStats> stats = new ArrayList<>();
         for (ListBucket b : consumers) {
             stats.add(b.stats);
         }
@@ -143,8 +135,8 @@ public class TickFrequency {
         return tickFrequency;
     }
 
-    public synchronized List<TickConsumer> getConsumers() {
-        List<TickConsumer> c = new ArrayList<TickConsumer>();
+    public synchronized List<NamedTickConsumer> getConsumers() {
+        List<NamedTickConsumer> c = new ArrayList<>();
         for (ListBucket b : consumers) {
             c.add(b.consumer);
         }
@@ -187,7 +179,7 @@ public class TickFrequency {
                             b.frequency,
                             new TickSupervisorInfo(System.currentTimeMillis(), b.consumer.getName()));
                 }
-                b.consumer.executeTick();
+                b.consumer.getTickConsumer().executeTick();
                 t = System.currentTimeMillis() - t;
             } catch (RuntimeException e) {
                 log.error("Freq=" + tickFrequency + " caught exception in consumer " + b.consumer.getName(), e);

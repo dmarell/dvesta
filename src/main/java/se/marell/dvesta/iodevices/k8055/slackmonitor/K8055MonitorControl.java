@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import se.marell.dvesta.iodevices.k8055.monitor.K8055Monitor;
 import se.marell.dvesta.iodevices.k8055.impl.K8055Status;
+import se.marell.dvesta.iodevices.k8055.monitor.K8055Monitor;
 import se.marell.dvesta.slack.SlackConnection;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.servlet.ServletContextEvent;
@@ -16,8 +16,8 @@ import java.util.Map;
 
 @Component
 public class K8055MonitorControl implements ServletContextListener {
+    private static final String MODULE_NAME = K8055MonitorControl.class.getSimpleName();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
     @Autowired
     private K8055Monitor monitor;
     private long statusTimestamp;
@@ -29,17 +29,7 @@ public class K8055MonitorControl implements ServletContextListener {
     @Autowired
     private TickEngine tickEngine;
 
-    private TickConsumer tickConsumer = new TickConsumer() {
-        @Override
-        public String getName() {
-            return K8055MonitorControl.this.getName();
-        }
-
-        @Override
-        public void executeTick() {
-            tick();
-        }
-    };
+    private NamedTickConsumer tickConsumer;
 
     private String getName() {
         return this.getClass().getSimpleName();
@@ -47,12 +37,7 @@ public class K8055MonitorControl implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        int tickFrequency = tickEngine.findFrequency(1, 1, 1);
-        if (tickFrequency == 0) {
-            log.info("Failed to find a suitable tick frequency: " + getName());
-            return;
-        }
-        tickEngine.addTickConsumer(tickFrequency, tickConsumer);
+        tickConsumer = new NamedTickConsumer(MODULE_NAME, this::tick, tickEngine, 1, 1, 1);
         log.info("Started " + getName());
     }
 

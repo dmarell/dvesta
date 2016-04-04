@@ -8,8 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import se.marell.dvesta.ioscan.*;
-import se.marell.dvesta.tickengine.AbstractTickConsumer;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 import se.marell.dvesta.utils.TimerEvent;
 
@@ -18,8 +17,8 @@ import javax.servlet.ServletContextListener;
 
 @Component
 public class DemoControl implements ServletContextListener {
+    private static final String MODULE_NAME = DemoControl.class.getSimpleName();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
     @Autowired
     private TickEngine tickEngine;
 
@@ -42,22 +41,12 @@ public class DemoControl implements ServletContextListener {
             terraceLights.setOutputStatus(false);
         }
     });
+    private NamedTickConsumer tickConsumer;
+    private NamedTickConsumer fastTickConsumer;
 
     private String getName() {
         return "democontrol";
     }
-
-    private TickConsumer tickConsumer = new TickConsumer() {
-        @Override
-        public String getName() {
-            return DemoControl.this.getName();
-        }
-
-        @Override
-        public void executeTick() {
-            tick();
-        }
-    };
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
@@ -69,24 +58,8 @@ public class DemoControl implements ServletContextListener {
             log.error("I/O mapping failed:" + e.getMessage());
         }
 
-        int tickFrequency = tickEngine.findFrequency(1, 10, 1);
-        if (tickFrequency == 0) {
-            log.info("Failed to find a suitable tick frequency: " + getName());
-            return;
-        }
-        tickEngine.addTickConsumer(tickFrequency, tickConsumer);
-
-        int fastTickFrequency = tickEngine.findFrequency(1, 100, 20);
-        if (fastTickFrequency == 0) {
-            log.info("Failed to find a suitable fast tick frequency: " + getName());
-            return;
-        }
-        tickEngine.addTickConsumer(fastTickFrequency, new AbstractTickConsumer("DemoControl.fast") {
-            @Override
-            public void executeTick() {
-                fastTick();
-            }
-        });
+        tickConsumer = new NamedTickConsumer(MODULE_NAME, this::tick, tickEngine, 1, 10, 1);
+        fastTickConsumer = new NamedTickConsumer(MODULE_NAME + ".fast", this::fastTick, tickEngine, 1, 100, 20);
 
         log.info("Started " + getName());
     }
@@ -95,6 +68,7 @@ public class DemoControl implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         log.info("deactivating " + getName());
         tickEngine.removeTickConsumer(tickConsumer);
+        tickEngine.removeTickConsumer(fastTickConsumer);
         log.info("deactivated " + getName());
     }
 

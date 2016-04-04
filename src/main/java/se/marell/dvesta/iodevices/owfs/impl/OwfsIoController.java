@@ -14,8 +14,7 @@ import se.marell.dvesta.ioscan.BitInput;
 import se.marell.dvesta.ioscan.FloatInput;
 import se.marell.dvesta.ioscan.IoMapper;
 import se.marell.dvesta.ioscan.IoMappingException;
-import se.marell.dvesta.tickengine.AbstractTickConsumer;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.annotation.PreDestroy;
@@ -25,48 +24,9 @@ import java.util.*;
 
 @Service
 public class OwfsIoController implements OwfsIoConfigurationService {
-
-    private static class AiStatus {
-        private double value;
-        private boolean isConnected;
-
-        public AiStatus(double value, boolean isConnected) {
-            this.value = value;
-            this.isConnected = isConnected;
-        }
-
-        public double getValue() {
-            return value;
-        }
-
-        public boolean isConnected() {
-            return isConnected;
-        }
-    }
-
-    private static class DiStatus {
-        private boolean value;
-        private boolean isConnected;
-
-        public DiStatus(boolean value, boolean isConnected) {
-            this.value = value;
-            this.isConnected = isConnected;
-        }
-
-        public boolean getValue() {
-            return value;
-        }
-
-        public boolean isConnected() {
-            return isConnected;
-        }
-    }
-
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
     private static final int LOOP_TIME_MS = 1000;
-
-    private static final String MODULE_NAME = "OwfsIoController";
+    private static final String MODULE_NAME = OwfsIoController.class.getSimpleName();
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private OwfsConfiguration config;
     @Autowired
     private TimeSource timeSource;
@@ -74,34 +34,23 @@ public class OwfsIoController implements OwfsIoConfigurationService {
     private IoMapper ioMapper;
     @Autowired
     private TickEngine tickEngine;
-
-    private List<DS18B20Device> devicesDs18b20 = new ArrayList<DS18B20Device>();
-    private List<DS2450Device> devicesDs2450 = new ArrayList<DS2450Device>();
-    private List<DS2405Device> devicesDs2405 = new ArrayList<DS2405Device>();
-
-    private Map<String, AiStatus> analogInputValueMap = new HashMap<String, AiStatus>();
-    private Map<String, DiStatus> bitInputValueMap = new HashMap<String, DiStatus>();
-
+    private List<DS18B20Device> devicesDs18b20 = new ArrayList<>();
+    private List<DS2450Device> devicesDs2450 = new ArrayList<>();
+    private List<DS2405Device> devicesDs2405 = new ArrayList<>();
+    private Map<String, AiStatus> analogInputValueMap = new HashMap<>();
+    private Map<String, DiStatus> bitInputValueMap = new HashMap<>();
     private Thread thread;
     private Set<String> detectedDevices;
-    private Map<String, Integer> deviceLostCounterMap = new TreeMap<String, Integer>();
+    private Map<String, Integer> deviceLostCounterMap = new TreeMap<>();
     private boolean threadStopRequest;
-
     private PassiveTimer initTimer = new PassiveTimer(10000);
-
-    private TickConsumer preTickConsumer;
+    private NamedTickConsumer preTickConsumer;
 
     private void activate() {
         if (preTickConsumer != null) {
             return; // Already activated
         }
-
-        preTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-pre") {
-            @Override
-            public void executeTick() {
-                preTick();
-            }
-        };
+        preTickConsumer = new NamedTickConsumer(MODULE_NAME + ".pre", this::preTick);
         log.info("activated " + MODULE_NAME);
     }
 
@@ -357,5 +306,41 @@ public class OwfsIoController implements OwfsIoConfigurationService {
             }
         }
         return result;
+    }
+
+    private static class AiStatus {
+        private double value;
+        private boolean isConnected;
+
+        public AiStatus(double value, boolean isConnected) {
+            this.value = value;
+            this.isConnected = isConnected;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public boolean isConnected() {
+            return isConnected;
+        }
+    }
+
+    private static class DiStatus {
+        private boolean value;
+        private boolean isConnected;
+
+        public DiStatus(boolean value, boolean isConnected) {
+            this.value = value;
+            this.isConnected = isConnected;
+        }
+
+        public boolean getValue() {
+            return value;
+        }
+
+        public boolean isConnected() {
+            return isConnected;
+        }
     }
 }

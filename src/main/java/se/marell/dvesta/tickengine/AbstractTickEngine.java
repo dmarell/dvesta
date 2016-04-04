@@ -18,27 +18,27 @@ public abstract class AbstractTickEngine implements TickEngine {
     }
 
     @Override
-    public void addTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+    public void addTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
 
     }
 
     @Override
-    public int addTickConsumer(int lowFreq, int hiFreq, int preferedFreq, @NotNull TickConsumer consumer) {
+    public int addTickConsumer(int lowFreq, int hiFreq, int preferedFreq, @NotNull NamedTickConsumer consumer) {
         return 0;
     }
 
     @Override
-    public void addPreTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+    public void addPreTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
 
     }
 
     @Override
-    public void addPostTickConsumer(int tickFrequency, @NotNull TickConsumer consumer) {
+    public void addPostTickConsumer(int tickFrequency, @NotNull NamedTickConsumer consumer) {
 
     }
 
     @Override
-    public int removeTickConsumer(@NotNull TickConsumer consumer) {
+    public int removeTickConsumer(@NotNull NamedTickConsumer consumer) {
         return 0;
     }
 

@@ -8,11 +8,6 @@ package se.marell.dvesta.tickengine;
  */
 public interface TickConsumer {
     /**
-     * @return Name of consumer. Must be unique among tick consumers.
-     */
-    String getName();
-
-    /**
      * This method is called by the execution framework in the requested frequency. The tick consumer is expected
      * to perform its work/logic here.
      */

@@ -17,8 +17,7 @@ import se.marell.dvesta.iodevices.razberry.impl.commanddata.data.ZWayDataReply;
 import se.marell.dvesta.iodevices.razberry.impl.commanddata.zautomation.ZAutomationDevice;
 import se.marell.dvesta.iodevices.razberry.impl.commanddata.zautomation.ZAutomationDevicesReply;
 import se.marell.dvesta.ioscan.*;
-import se.marell.dvesta.tickengine.AbstractTickConsumer;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.annotation.PreDestroy;
@@ -26,7 +25,7 @@ import java.util.*;
 
 @Service
 public class RazberryIoController extends AbstractIoController implements RazberryIoConfigurationService {
-    private static final String MODULE_NAME = "RazberryIoController";
+    private static final String MODULE_NAME = RazberryIoController.class.getSimpleName();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     @Autowired
     private RazberryClient razberryClient;
@@ -41,8 +40,8 @@ public class RazberryIoController extends AbstractIoController implements Razber
     private Map<String/*url*/, List<FloatOutput>> floatOutputMap = new HashMap<>();
     private Map<String/*url*/, List<AlarmInput>> alarmInputMap = new HashMap<>();
     private Map<String/*Logical name*/, RazberryDeviceAddress> deviceAddressMap = new HashMap<>();
-    private TickConsumer preTickConsumer;
-    private TickConsumer postTickConsumer;
+    private NamedTickConsumer preTickConsumer;
+    private NamedTickConsumer postTickConsumer;
 
     public RazberryStatus getStatus(long since) {
         long last = 0;
@@ -83,18 +82,8 @@ public class RazberryIoController extends AbstractIoController implements Razber
         if (preTickConsumer != null) {
             return; // Already activated
         }
-        preTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-pre") {
-            @Override
-            public void executeTick() {
-                preTick();
-            }
-        };
-        postTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-post") {
-            @Override
-            public void executeTick() {
-                postTick();
-            }
-        };
+        preTickConsumer = new NamedTickConsumer(MODULE_NAME + ".pre", this::preTick);
+        postTickConsumer = new NamedTickConsumer(MODULE_NAME + ".post", this::postTick);
         int tickFrequency = tickEngine.findFrequency(1, 20, 20);
         if (tickFrequency == 0) {
             throw new RuntimeException("Failed to find a suitable tick frequency");

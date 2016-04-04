@@ -16,8 +16,7 @@ import se.marell.dvesta.ioscan.BitInput;
 import se.marell.dvesta.ioscan.BitOutput;
 import se.marell.dvesta.ioscan.DeviceAddress;
 import se.marell.dvesta.ioscan.IoMapper;
-import se.marell.dvesta.tickengine.AbstractTickConsumer;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 import se.marell.iodevices.ontrak.Adu208Adutux;
 
@@ -29,109 +28,26 @@ import java.util.Map;
 
 @Service
 public class Adu208IoController extends AbstractIoController implements Adu208IoConfigurationService {
-    private static class InvertibleBitInput {
-        private boolean invert;
-        private BitInput bitInput;
-
-        public void set(boolean invert, BitInput din) {
-            this.invert = invert;
-            bitInput = din;
-        }
-
-        public boolean isInvert() {
-            return invert;
-        }
-
-        public BitInput getBitInput() {
-            return bitInput;
-        }
-    }
-
-    private static class InvertibleBitOutput {
-        private boolean invert;
-        private BitOutput bitOutput;
-
-        public void set(boolean invert, BitOutput dout) {
-            this.invert = invert;
-            bitOutput = dout;
-        }
-
-        public boolean isInvert() {
-            return invert;
-        }
-
-        public BitOutput getBitOutput() {
-            return bitOutput;
-        }
-    }
-
-    private class DeviceIO {
-        private InvertibleBitInput[] bitInputs;
-        private InvertibleBitOutput[] bitOutputs;
-
-        private DeviceIO() {
-            bitInputs = new InvertibleBitInput[8];
-            bitOutputs = new InvertibleBitOutput[8];
-        }
-
-        public InvertibleBitInput[] getBitInputs() {
-            return bitInputs;
-        }
-
-        public void setBitInput(int bitno, boolean invert, BitInput din) {
-            InvertibleBitInput iin = bitInputs[bitno];
-            if (iin == null) {
-                iin = bitInputs[bitno] = new InvertibleBitInput();
-            }
-            iin.set(invert, din);
-        }
-
-        public InvertibleBitOutput[] getBitOutputs() {
-            return bitOutputs;
-        }
-
-        public void setBitOutput(int bitno, boolean invert, BitOutput dout) {
-            InvertibleBitOutput iout = bitOutputs[bitno];
-            if (iout == null) {
-                iout = bitOutputs[bitno] = new InvertibleBitOutput();
-            }
-            iout.set(invert, dout);
-        }
-    }
-
+    private static final String MODULE_NAME = Adu208IoController.class.getSimpleName();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    private static final String MODULE_NAME = "Adu208IoController";
-    private List<Adu208Adutux> devices = new ArrayList<Adu208Adutux>();
+    private List<Adu208Adutux> devices = new ArrayList<>();
     private Adu208Adutux lastPolledDevice;
     private int nextDeviceIndex;
     private int[] digitalOutputValues;
-
     @Autowired
     private IoMapper ioMapper;
     @Autowired
     private TickEngine tickEngine;
-    private Map<Integer/*Adu208 deviceNumber*/, DeviceIO> deviceMap = new HashMap<Integer, DeviceIO>();
-
-    private TickConsumer preTickConsumer;
-    private TickConsumer postTickConsumer;
+    private Map<Integer/*Adu208 deviceNumber*/, DeviceIO> deviceMap = new HashMap<>();
+    private NamedTickConsumer preTickConsumer;
+    private NamedTickConsumer postTickConsumer;
 
     private void activate() {
         if (preTickConsumer != null) {
             return; // Already activated
         }
-        preTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-pre") {
-            @Override
-            public void executeTick() {
-                preTick();
-            }
-        };
-        postTickConsumer = new AbstractTickConsumer(MODULE_NAME + "-post") {
-            @Override
-            public void executeTick() {
-                postTick();
-            }
-        };
+        preTickConsumer = new NamedTickConsumer(MODULE_NAME + ".pre", this::preTick);
+        postTickConsumer = new NamedTickConsumer(MODULE_NAME + ".post", this::postTick);
         log.info("activated " + MODULE_NAME);
     }
 
@@ -297,6 +213,76 @@ public class Adu208IoController extends AbstractIoController implements Adu208Io
             DeviceAddress address = new DigitalOutputAdu208Address(device.getDeviceNumber(), io.getBitno());
             ioMapper.mapBitOutput(io.getLogicalName(), address.toString(), io.getDescription());
             log.info("Mapped Do " + io.getLogicalName() + " to address " + address.toString());
+        }
+    }
+
+    private static class InvertibleBitInput {
+        private boolean invert;
+        private BitInput bitInput;
+
+        public void set(boolean invert, BitInput din) {
+            this.invert = invert;
+            bitInput = din;
+        }
+
+        public boolean isInvert() {
+            return invert;
+        }
+
+        public BitInput getBitInput() {
+            return bitInput;
+        }
+    }
+
+    private static class InvertibleBitOutput {
+        private boolean invert;
+        private BitOutput bitOutput;
+
+        public void set(boolean invert, BitOutput dout) {
+            this.invert = invert;
+            bitOutput = dout;
+        }
+
+        public boolean isInvert() {
+            return invert;
+        }
+
+        public BitOutput getBitOutput() {
+            return bitOutput;
+        }
+    }
+
+    private class DeviceIO {
+        private InvertibleBitInput[] bitInputs;
+        private InvertibleBitOutput[] bitOutputs;
+
+        private DeviceIO() {
+            bitInputs = new InvertibleBitInput[8];
+            bitOutputs = new InvertibleBitOutput[8];
+        }
+
+        public InvertibleBitInput[] getBitInputs() {
+            return bitInputs;
+        }
+
+        public void setBitInput(int bitno, boolean invert, BitInput din) {
+            InvertibleBitInput iin = bitInputs[bitno];
+            if (iin == null) {
+                iin = bitInputs[bitno] = new InvertibleBitInput();
+            }
+            iin.set(invert, din);
+        }
+
+        public InvertibleBitOutput[] getBitOutputs() {
+            return bitOutputs;
+        }
+
+        public void setBitOutput(int bitno, boolean invert, BitOutput dout) {
+            InvertibleBitOutput iout = bitOutputs[bitno];
+            if (iout == null) {
+                iout = bitOutputs[bitno] = new InvertibleBitOutput();
+            }
+            iout.set(invert, dout);
         }
     }
 }

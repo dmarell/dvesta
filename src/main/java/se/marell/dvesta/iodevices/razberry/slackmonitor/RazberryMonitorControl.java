@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import se.marell.dvesta.iodevices.razberry.impl.RazberryStatus;
 import se.marell.dvesta.iodevices.razberry.monitor.RazberryMonitor;
 import se.marell.dvesta.slack.SlackConnection;
-import se.marell.dvesta.tickengine.TickConsumer;
+import se.marell.dvesta.tickengine.NamedTickConsumer;
 import se.marell.dvesta.tickengine.TickEngine;
 
 import javax.servlet.ServletContextEvent;
@@ -16,6 +16,8 @@ import java.util.Map;
 
 @Component
 public class RazberryMonitorControl implements ServletContextListener {
+    private static final String MODULE_NAME = RazberryMonitorControl.class.getSimpleName();
+
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -29,38 +31,19 @@ public class RazberryMonitorControl implements ServletContextListener {
     @Autowired
     private TickEngine tickEngine;
 
-    private TickConsumer tickConsumer = new TickConsumer() {
-        @Override
-        public String getName() {
-            return RazberryMonitorControl.this.getName();
-        }
-
-        @Override
-        public void executeTick() {
-            tick();
-        }
-    };
-
-    private String getName() {
-        return this.getClass().getSimpleName();
-    }
+    private NamedTickConsumer tickConsumer;
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        int tickFrequency = tickEngine.findFrequency(1, 1, 1);
-        if (tickFrequency == 0) {
-            log.info("Failed to find a suitable tick frequency: " + getName());
-            return;
-        }
-        tickEngine.addTickConsumer(tickFrequency, tickConsumer);
-        log.info("Started " + getName());
+        tickConsumer = new NamedTickConsumer(MODULE_NAME, this::tick, tickEngine, 1, 1, 1);
+        log.info("Started " + MODULE_NAME);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        log.info("deactivating " + getName());
+        log.info("deactivating " + MODULE_NAME);
         tickEngine.removeTickConsumer(tickConsumer);
-        log.info("deactivated " + getName());
+        log.info("deactivated " + MODULE_NAME);
     }
 
     private void tick() {

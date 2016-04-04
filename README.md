@@ -3,6 +3,10 @@
 Various Spring services and Spring components related to home automation.
 
 ### Release notes
+* Version 2.0.0 - 2016-04-04
+    * Java 8 inspired API improvements for TickConsumer reducing tick execution initialization to a one-liner.
+    * Introduced NamedTickConsumer and removed ExecutableModule
+    * Removed DoorBell
 * Version 1.3.2 - 2016-03-21
     * NPE bug fix in PUT/GET log-level.
 * Version 1.3.1 - 2016-03-21
