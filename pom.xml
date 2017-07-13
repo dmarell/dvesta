@@ -22,10 +22,10 @@
     <distributionManagement>
         <repository>
             <id>caglabs</id>
-            <url>http://artifactory.caglabs.se/artifactory/libs-release/</url>
+            <url>http://artifactory.caglabs.se/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
-            <id>marell-snapshots</id>
+            <id>caglabs-snapshots</id>
             <url>http://artifactory.caglabs.se/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
     </distributionManagement>
