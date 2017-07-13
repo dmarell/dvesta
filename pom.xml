@@ -21,12 +21,12 @@
 
     <distributionManagement>
         <repository>
-            <id>marell</id>
+            <id>caglabs</id>
             <url>http://artifactory.caglabs.se/artifactory/libs-release/</url>
         </repository>
         <snapshotRepository>
             <id>marell-snapshots</id>
-            <url>http://marell.se/artifactory/libs-snapshot-local</url>
+            <url>http://artifactory.caglabs.se/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -259,7 +259,7 @@
             <url>http://repo.spring.io/libs-release</url>
         </repository>
         <repository>
-            <id>marell</id>
+            <id>caglabs</id>
             <url>http://artifactory.caglabs.se/artifactory/libs-release/</url>
         </repository>
         <repository>
