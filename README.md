@@ -3,7 +3,7 @@
 Various Spring services and Spring components related to home automation.
 
 ### Release notes
-* Version 2.0.4 - 2017-07-19
+* Version 2.0.5 - 2017-07-19
     * K8055: Suppress errors a few seconds in order to avoid to report short errors that immediately heals.
 * Version 2.0.2 - 2017-07-13
     * Upgraded Spring Boot to 1.5.4
