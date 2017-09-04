@@ -69,9 +69,9 @@ public class K8055MonitorControl implements ServletContextListener {
             errorTimer.restart();
         }
 
-        if (errorTimer.hasExpired()) {
-            hasError = status.hasError();
+        if (errorTimer.hasExpired() && !hasError) {
             for (Map.Entry<String, String> e : errorMap.entrySet()) {
+                hasError = status.hasError();
                 String msg = String.format("Error status for K8055: %s: Reason: %s", e.getKey(), e.getValue());
                 slackConnection.sendMessage(msg);
                 log.info(msg);
